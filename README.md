@@ -1,5 +1,4 @@
 ﻿# Lab-3
-# Distributed-systems-Lab-3
 # Distributed Systems Lab 3 – Resilience Engineering
 
 This project demonstrates the design and implementation of **resilient distributed systems** using Python microservices deployed on **Kubernetes**.  
@@ -186,5 +185,6 @@ Author
 Anush Choudhary
 MSc Student, Computer Science
 University College Dublin
+
 
 
