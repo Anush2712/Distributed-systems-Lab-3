@@ -44,37 +44,6 @@ The application consists of two Python microservices:
 
 Both services are containerized using **Docker** and deployed on **Kubernetes** as separate Deployments.
 
----
-
-## System Architecture Diagram
-┌─────────────────────────────┐
-│ Kubernetes Cluster │
-│ ─────────────────────────── │
-│ │
-│ ┌─────────────────────┐ │
-│ │ Client Pod │ │
-│ │─────────────────────│ │
-│ │ ClientService │ │
-│ │ (Python + requests) │ │
-│ └─────────┬───────────┘ │
-│ │ HTTP Requests │
-│ ▼ │
-│ ┌─────────────────────┐ │
-│ │ Backend Pod │ │
-│ │─────────────────────│ │
-│ │ BackendService │ │
-│ │ (Python + Flask) │ │
-│ └─────────────────────┘ │
-│ │
-│ ┌───────────────────────┐ │
-│ │ Kubernetes Services │ │
-│ │ (client-service / │ │
-│ │ backend-service) │ │
-│ └───────────────────────┘ │
-└─────────────────────────────┘
-
-
----
 
 ## Installation
 
@@ -217,4 +186,5 @@ Author
 Anush Choudhary
 MSc Student, Computer Science
 University College Dublin
+
 
