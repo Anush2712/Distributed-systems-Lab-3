@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: client-config
+  namespace: default
+data:
+  BACKEND_URL: "http://backend-service:8080/api/data"
+  REQUEST_INTERVAL: "2"
+  CLIENT_MODE: "resilient"
+  CB_FAILURE_THRESHOLD: "5"
+  CB_RECOVERY_TIMEOUT: "10"
+  RETRY_MAX_ATTEMPTS: "3"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-service
+  namespace: default
+  labels:
+    app: client
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+        version: v1
+    spec:
+      containers:
+      - name: client
+        image: client-service:latest
+        imagePullPolicy: Never
+        env:
+        - name: BACKEND_URL
+          valueFrom:
+            configMapKeyRef:
+              name: client-config
+              key: BACKEND_URL
+        - name: REQUEST_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: client-config
+              key: REQUEST_INTERVAL
+        - name: CLIENT_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: client-config
+              key: CLIENT_MODE
+        - name: CB_FAILURE_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: client-config
+              key: CB_FAILURE_THRESHOLD
+        - name: CB_RECOVERY_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: client-config
+              key: CB_RECOVERY_TIMEOUT
+        - name: RETRY_MAX_ATTEMPTS
+          valueFrom:
+            configMapKeyRef:
+              name: client-config
+              key: RETRY_MAX_ATTEMPTS
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"

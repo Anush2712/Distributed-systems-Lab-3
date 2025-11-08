@@ -1,0 +1,126 @@
+{
+  "version": "1.0.0",
+  "title": "Backend Service Pod Failure",
+  "description": "Terminate backend service pod to test client resilience patterns (circuit breaker and retry logic). This experiment validates that the client can handle sudden backend unavailability gracefully.",
+  "tags": [
+    "kubernetes",
+    "pod-failure",
+    "resilience",
+    "circuit-breaker"
+  ],
+  "configuration": {
+    "k8s_namespace": {
+      "type": "env",
+      "key": "CHAOS_NAMESPACE",
+      "default": "default"
+    }
+  },
+  "steady-state-hypothesis": {
+    "title": "Application is healthy and backend is responsive",
+    "probes": [
+      {
+        "name": "backend-pods-are-running",
+        "type": "probe",
+        "tolerance": true,
+        "provider": {
+          "type": "python",
+          "module": "chaosk8s.pod.probes",
+          "func": "pods_are_ready",
+          "arguments": {
+            "label_selector": "app=backend",
+            "ns": "${k8s_namespace}"
+          }
+        }
+      },
+      {
+        "name": "backend-health-check",
+        "type": "probe",
+        "tolerance": 200,
+        "provider": {
+          "type": "http",
+          "url": "http://backend-service:8080/health",
+          "timeout": 5,
+          "headers": {
+            "Accept": "application/json"
+          }
+        }
+      },
+      {
+        "name": "backend-api-endpoint-works",
+        "type": "probe",
+        "tolerance": [200, 500],
+        "provider": {
+          "type": "http",
+          "url": "http://backend-service:8080/api/data",
+          "timeout": 5
+        }
+      }
+    ]
+  },
+  "method": [
+    {
+      "type": "action",
+      "name": "terminate-one-backend-pod",
+      "provider": {
+        "type": "python",
+        "module": "chaosk8s.pod.actions",
+        "func": "terminate_pods",
+        "arguments": {
+          "label_selector": "app=backend",
+          "ns": "${k8s_namespace}",
+          "qty": 1,
+          "grace_period": 0
+        }
+      },
+      "pauses": {
+        "before": 5,
+        "after": 30
+      }
+    },
+    {
+      "type": "probe",
+      "name": "check-remaining-pods",
+      "provider": {
+        "type": "python",
+        "module": "chaosk8s.pod.probes",
+        "func": "count_pods",
+        "arguments": {
+          "label_selector": "app=backend",
+          "ns": "${k8s_namespace}",
+          "phase": "Running"
+        }
+      },
+      "pauses": {
+        "after": 10
+      }
+    },
+    {
+      "type": "probe",
+      "name": "test-backend-accessibility",
+      "provider": {
+        "type": "http",
+        "url": "http://backend-service:8080/health",
+        "timeout": 3,
+        "tolerance": [200, 503]
+      }
+    }
+  ],
+  "rollbacks": [
+    {
+      "type": "action",
+      "name": "wait-for-kubernetes-recovery",
+      "provider": {
+        "type": "python",
+        "module": "chaosk8s.pod.probes",
+        "func": "pods_are_ready",
+        "arguments": {
+          "label_selector": "app=backend",
+          "ns": "${k8s_namespace}"
+        }
+      },
+      "pauses": {
+        "after": 15
+      }
+    }
+  ]
+}
